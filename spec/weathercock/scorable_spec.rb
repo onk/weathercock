@@ -74,6 +74,26 @@ RSpec.describe Weathercock::Scorable do
       )
     end
 
+    it "unions last N hourly keys" do
+      Article.top(:views, hours: 3)
+      expect(@redis).to have_received(:call).with(
+        "ZUNIONSTORE", anything, 3,
+        "weathercock:article:views:2026-04-15-09",
+        "weathercock:article:views:2026-04-15-08",
+        "weathercock:article:views:2026-04-15-07"
+      )
+    end
+
+    it "unions last N monthly keys" do
+      Article.top(:views, months: 3)
+      expect(@redis).to have_received(:call).with(
+        "ZUNIONSTORE", anything, 3,
+        "weathercock:article:views:2026-04",
+        "weathercock:article:views:2026-03",
+        "weathercock:article:views:2026-02"
+      )
+    end
+
     it "returns ids in descending order" do
       result = Article.top(:views, days: 7)
       expect(result).to eq(["42", "7", "133"])

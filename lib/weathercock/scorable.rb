@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "date"
 require_relative "../weathercock"
 
 module Weathercock
@@ -19,7 +20,8 @@ module Weathercock
         elsif days
           days.times.map { |i| "#{base}:#{(now - i * 86400).strftime("%Y-%m-%d")}" }
         elsif months
-          months.times.map { |i| "#{base}:#{(now << i).strftime("%Y-%m")}" }
+          d = Date.new(now.year, now.month)
+          months.times.map { |i| "#{base}:#{(d << i).strftime("%Y-%m")}" }
         end
 
         dest = "#{base}:top"
