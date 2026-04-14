@@ -57,6 +57,7 @@ RSpec.describe Weathercock::Scorable do
   describe ".top" do
     before do
       allow(@redis).to receive(:call).with("ZUNIONSTORE", any_args).and_return(7)
+      allow(@redis).to receive(:call).with("EXPIRE", any_args)
       allow(@redis).to receive(:call).with("ZREVRANGE", any_args).and_return(["42", "7", "133"])
     end
 
@@ -92,6 +93,11 @@ RSpec.describe Weathercock::Scorable do
         "weathercock:article:views:2026-03",
         "weathercock:article:views:2026-02"
       )
+    end
+
+    it "sets 15 min TTL on the temp key" do
+      Article.top(:views, days: 7)
+      expect(@redis).to have_received(:call).with("EXPIRE", "weathercock:article:views:top", 900)
     end
 
     it "returns ids in descending order" do

@@ -26,6 +26,7 @@ module Weathercock
 
         dest = "#{base}:top"
         redis.call("ZUNIONSTORE", dest, keys.size, *keys)
+        redis.call("EXPIRE", dest, 900)
         redis.call("ZREVRANGE", dest, 0, -1)
       end
 
