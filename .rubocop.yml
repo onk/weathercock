@@ -1,5 +1,24 @@
+inherit_from: .rubocop_todo.yml
+
 AllCops:
   TargetRubyVersion: 3.2
+  NewCops: enable
+  SuggestExtensions: false
+
+Layout/LineLength:
+  Max: 160
+
+Style/Documentation:
+  Enabled: false
+
+Style/WordArray:
+  Enabled: false
+
+# Require underscore separators only when 2+ separators are needed (7+ digits).
+# Strict: true disallows irregular grouping like 10_000_00.
+Style/NumericLiterals:
+  MinDigits: 7
+  Strict: true
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes

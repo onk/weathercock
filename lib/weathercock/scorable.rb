@@ -18,7 +18,7 @@ module Weathercock
       def hit_counts(event, ids:, **window)
         dest = weathercock_union(event, window)
         redis = Weathercock.config.redis
-        ids.map { |id| [id.to_s, (redis.call("ZSCORE", dest, id.to_s) || "0").to_i] }.to_h
+        ids.to_h { |id| [id.to_s, (redis.call("ZSCORE", dest, id.to_s) || "0").to_i] }
       end
 
       def weathercock_base_key(event)
@@ -33,14 +33,15 @@ module Weathercock
         now = Time.now
         type, count = window.first
 
-        keys = if type == :hours
-          count.times.map { |i| "#{base}:#{(now - i * 3600).strftime("%Y-%m-%d-%H")}" }
-        elsif type == :days
-          count.times.map { |i| "#{base}:#{(now - i * 86400).strftime("%Y-%m-%d")}" }
-        elsif type == :months
-          d = Date.new(now.year, now.month)
-          count.times.map { |i| "#{base}:#{(d << i).strftime("%Y-%m")}" }
-        end
+        keys = case type
+               when :hours
+                 count.times.map { |i| "#{base}:#{(now - (i * 3600)).strftime("%Y-%m-%d-%H")}" }
+               when :days
+                 count.times.map { |i| "#{base}:#{(now - (i * 86400)).strftime("%Y-%m-%d")}" }
+               when :months
+                 d = Date.new(now.year, now.month)
+                 count.times.map { |i| "#{base}:#{(d << i).strftime("%Y-%m")}" }
+               end
 
         dest = "#{base}:top:#{type}:#{count}"
         weights = decay_factor ? count.times.map { |i| (decay_factor**i).round(10) } : nil
