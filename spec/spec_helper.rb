@@ -2,6 +2,7 @@
 
 require "weathercock"
 require "timecop"
+require "redis-client"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -14,5 +15,12 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  config.after { Timecop.return }
+  config.before(:suite) do
+    Weathercock.configure { |c| c.redis = RedisClient.new(host: "localhost", port: 6379) }
+  end
+
+  config.after do
+    Timecop.return
+    Weathercock.config.redis.call("FLUSHDB")
+  end
 end

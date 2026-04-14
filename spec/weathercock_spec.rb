@@ -26,9 +26,9 @@ RSpec.describe Weathercock do
     end
 
     it "sets redis" do
-      fake_redis = double("redis")
-      Weathercock.configure { |c| c.redis = fake_redis }
-      expect(Weathercock.config.redis).to eq(fake_redis)
+      redis = RedisClient.new
+      Weathercock.configure { |c| c.redis = redis }
+      expect(Weathercock.config.redis).to eq(redis)
     end
   end
 end

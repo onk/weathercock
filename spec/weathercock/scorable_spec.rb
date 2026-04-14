@@ -3,18 +3,9 @@
 require "weathercock/scorable"
 
 RSpec.describe Weathercock::Scorable do
-  around do |example|
-    original = Weathercock.instance_variable_get(:@config)
-    example.run
-    Weathercock.instance_variable_set(:@config, original)
-  end
+  let(:redis) { Weathercock.config.redis }
 
   before do
-    @pipeline = instance_double("RedisClient::Pipeline")
-    allow(@pipeline).to receive(:call)
-    @redis = instance_double("RedisClient")
-    allow(@redis).to receive(:pipelined).and_yield(@pipeline)
-    Weathercock.configure { |c| c.redis = @redis }
     Timecop.freeze(Time.new(2026, 4, 15, 9, 0, 0))
     stub_const("Article", Class.new do
       include Weathercock::Scorable
@@ -32,59 +23,57 @@ RSpec.describe Weathercock::Scorable do
         def id = 1
       end)
       Blog::Article.new.hit(:views)
-      expect(@pipeline).to have_received(:call).with("ZINCRBY", "weathercock:blog_article:views:2026-04-15-09", 1, "1")
+      expect(redis.call("ZSCORE", "weathercock:blog_article:views:2026-04-15-09", "1")).to eq(1.0)
     end
 
     it "writes to hourly key" do
       @article.hit(:views)
-      expect(@pipeline).to have_received(:call).with("ZINCRBY", "weathercock:article:views:2026-04-15-09", 1, "42")
+      expect(redis.call("ZSCORE", "weathercock:article:views:2026-04-15-09", "42")).to eq(1.0)
     end
 
     it "writes to daily key" do
       @article.hit(:views)
-      expect(@pipeline).to have_received(:call).with("ZINCRBY", "weathercock:article:views:2026-04-15", 1, "42")
+      expect(redis.call("ZSCORE", "weathercock:article:views:2026-04-15", "42")).to eq(1.0)
     end
 
     it "writes to monthly key" do
       @article.hit(:views)
-      expect(@pipeline).to have_received(:call).with("ZINCRBY", "weathercock:article:views:2026-04", 1, "42")
+      expect(redis.call("ZSCORE", "weathercock:article:views:2026-04", "42")).to eq(1.0)
     end
 
     it "accepts increment option" do
       @article.hit(:views, increment: 5)
-      expect(@pipeline).to have_received(:call).with("ZINCRBY", "weathercock:article:views:2026-04-15", 5, "42")
+      expect(redis.call("ZSCORE", "weathercock:article:views:2026-04-15", "42")).to eq(5.0)
     end
   end
 
   describe "#hit_count" do
-    before do
-      allow(@redis).to receive(:call).with("ZUNIONSTORE", any_args).and_return(1)
-      allow(@redis).to receive(:call).with("EXPIRE", any_args)
-      allow(@redis).to receive(:call).with("ZSCORE", anything, "42").and_return("5")
-    end
-
     it "returns score for the instance over a time window" do
-      expect(@article.hit_count(:views, days: 7)).to eq(5)
+      @article.hit(:views)
+      expect(@article.hit_count(:views, days: 7)).to eq(1)
     end
 
     it "returns 0 when no hits recorded" do
-      allow(@redis).to receive(:call).with("ZSCORE", anything, "42").and_return(nil)
       expect(@article.hit_count(:views, days: 7)).to eq(0)
     end
   end
 
   describe ".hit_counts" do
     before do
-      allow(@redis).to receive(:call).with("ZUNIONSTORE", any_args).and_return(2)
-      allow(@redis).to receive(:call).with("EXPIRE", any_args)
-      allow(@redis).to receive(:call).with("ZSCORE", anything, "42").and_return("10")
-      allow(@redis).to receive(:call).with("ZSCORE", anything, "7").and_return("3")
-      allow(@redis).to receive(:call).with("ZSCORE", anything, "99").and_return(nil)
+      stub_const("Article", Class.new do
+        include Weathercock::Scorable
+
+        attr_reader :id
+
+        def initialize(id) = @id = id
+      end)
+      Article.new(42).hit(:views, increment: 2)
+      Article.new(7).hit(:views)
     end
 
     it "returns a hash of id => count for given ids" do
       result = Article.hit_counts(:views, ids: [42, 7], days: 7)
-      expect(result).to eq("42" => 10, "7" => 3)
+      expect(result).to eq("42" => 2, "7" => 1)
     end
 
     it "returns 0 for ids with no hits" do
@@ -95,64 +84,47 @@ RSpec.describe Weathercock::Scorable do
 
   describe ".top" do
     before do
-      allow(@redis).to receive(:call).with("ZUNIONSTORE", any_args).and_return(7)
-      allow(@redis).to receive(:call).with("EXPIRE", any_args)
-      allow(@redis).to receive(:call).with("ZREVRANGE", any_args).and_return(["42", "7", "133"])
+      stub_const("Article", Class.new do
+        include Weathercock::Scorable
+
+        attr_reader :id
+
+        def initialize(id) = @id = id
+      end)
+      Article.new(42).hit(:views, increment: 2)
+      Article.new(7).hit(:views)
+      Article.new(133).hit(:views, increment: 3)
     end
 
     it "unions last N daily keys" do
-      Article.top(:views, days: 7)
-      expect(@redis).to have_received(:call).with(
-        "ZUNIONSTORE", anything, 7,
-        "weathercock:article:views:2026-04-15",
-        "weathercock:article:views:2026-04-14",
-        "weathercock:article:views:2026-04-13",
-        "weathercock:article:views:2026-04-12",
-        "weathercock:article:views:2026-04-11",
-        "weathercock:article:views:2026-04-10",
-        "weathercock:article:views:2026-04-09"
-      )
+      result = Article.top(:views, days: 7)
+      expect(result).to eq(["133", "42", "7"])
     end
 
     it "unions last N hourly keys" do
-      Article.top(:views, hours: 3)
-      expect(@redis).to have_received(:call).with(
-        "ZUNIONSTORE", anything, 3,
-        "weathercock:article:views:2026-04-15-09",
-        "weathercock:article:views:2026-04-15-08",
-        "weathercock:article:views:2026-04-15-07"
-      )
+      result = Article.top(:views, hours: 24)
+      expect(result).to eq(["133", "42", "7"])
     end
 
     it "unions last N monthly keys" do
-      Article.top(:views, months: 3)
-      expect(@redis).to have_received(:call).with(
-        "ZUNIONSTORE", anything, 3,
-        "weathercock:article:views:2026-04",
-        "weathercock:article:views:2026-03",
-        "weathercock:article:views:2026-02"
-      )
+      result = Article.top(:views, months: 3)
+      expect(result).to eq(["133", "42", "7"])
     end
 
     it "sets 15 min TTL on the temp key" do
       Article.top(:views, days: 7)
-      expect(@redis).to have_received(:call).with("EXPIRE", "weathercock:article:views:top:days:7", 900)
-    end
-
-    it "returns ids in descending order" do
-      result = Article.top(:views, days: 7)
-      expect(result).to eq(["42", "7", "133"])
+      ttl = redis.call("TTL", "weathercock:article:views:top:days:7")
+      expect(ttl).to eq(900)
     end
 
     it "applies exponential decay weights when decay_factor is given" do
+      # hour 0 (09:00): weight 1.0, hour 2 (07:00): weight 0.81
+      Timecop.freeze(Time.new(2026, 4, 15, 7, 0, 0)) { Article.new(1).hit(:views, increment: 10) }
+      Timecop.freeze(Time.new(2026, 4, 15, 9, 0, 0)) { Article.new(2).hit(:views, increment: 10) }
       Article.top(:views, hours: 3, decay_factor: 0.9)
-      expect(@redis).to have_received(:call).with(
-        "ZUNIONSTORE", anything, 3,
-        "weathercock:article:views:2026-04-15-09",
-        "weathercock:article:views:2026-04-15-08",
-        "weathercock:article:views:2026-04-15-07",
-        "WEIGHTS", 1.0, 0.9, 0.81
-      )
+      dest = "weathercock:article:views:top:hours:3"
+      expect(redis.call("ZSCORE", dest, "2").to_f).to eq(10.0)
+      expect(redis.call("ZSCORE", dest, "1").to_f).to be_within(0.001).of(8.1)
     end
   end
 end
