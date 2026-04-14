@@ -10,30 +10,32 @@ module Weathercock
 
     module ClassMethods
       def top(event, hours: nil, days: nil, months: nil)
-        ns = Weathercock.config.namespace
         redis = Weathercock.config.redis
-        model = name.gsub("::", "_").downcase
+        base = weathercock_base_key(event)
         now = Time.now
 
         keys = if hours
-          hours.times.map { |i| "#{ns}:#{model}:#{event}:#{(now - i * 3600).strftime("%Y-%m-%d-%H")}" }
+          hours.times.map { |i| "#{base}:#{(now - i * 3600).strftime("%Y-%m-%d-%H")}" }
         elsif days
-          days.times.map { |i| "#{ns}:#{model}:#{event}:#{(now - i * 86400).strftime("%Y-%m-%d")}" }
+          days.times.map { |i| "#{base}:#{(now - i * 86400).strftime("%Y-%m-%d")}" }
         elsif months
-          months.times.map { |i| "#{ns}:#{model}:#{event}:#{(now << i).strftime("%Y-%m")}" }
+          months.times.map { |i| "#{base}:#{(now << i).strftime("%Y-%m")}" }
         end
 
-        dest = "#{ns}:#{model}:#{event}:top"
+        dest = "#{base}:top"
         redis.call("ZUNIONSTORE", dest, keys.size, *keys)
         redis.call("ZREVRANGE", dest, 0, -1)
+      end
+
+      def weathercock_base_key(event)
+        "#{Weathercock.config.namespace}:#{name.gsub("::", "_").downcase}:#{event}"
       end
     end
 
     def hit(event, increment: 1)
       now = Time.now
-      ns = Weathercock.config.namespace
       redis = Weathercock.config.redis
-      base = "#{ns}:#{self.class.name.gsub("::", "_").downcase}:#{event}"
+      base = self.class.weathercock_base_key(event)
 
       redis.pipelined do |p|
         p.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m-%d-%H")}", increment, id.to_s)
