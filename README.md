@@ -64,6 +64,22 @@ Article.top(:views, months: 3)
 Article.top(:views, days: 7, decay_factor: 0.9)
 ```
 
+### Counting
+
+Get the total hit count for a single instance over a time window:
+
+```ruby
+article.hit_count(:views, days: 7)
+# => 42
+```
+
+Get hit counts for multiple instances at once (useful for list views):
+
+```ruby
+Article.hit_counts(:views, ids: [1, 2, 3], days: 7)
+# => {"1" => 42, "2" => 15, "3" => 7}
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

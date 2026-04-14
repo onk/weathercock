@@ -54,6 +54,43 @@ RSpec.describe Weathercock::Scorable do
     end
   end
 
+  describe "#hit_count" do
+    before do
+      allow(@redis).to receive(:call).with("ZUNIONSTORE", any_args).and_return(1)
+      allow(@redis).to receive(:call).with("EXPIRE", any_args)
+      allow(@redis).to receive(:call).with("ZSCORE", anything, "42").and_return("5")
+    end
+
+    it "returns score for the instance over a time window" do
+      expect(@article.hit_count(:views, days: 7)).to eq(5)
+    end
+
+    it "returns 0 when no hits recorded" do
+      allow(@redis).to receive(:call).with("ZSCORE", anything, "42").and_return(nil)
+      expect(@article.hit_count(:views, days: 7)).to eq(0)
+    end
+  end
+
+  describe ".hit_counts" do
+    before do
+      allow(@redis).to receive(:call).with("ZUNIONSTORE", any_args).and_return(2)
+      allow(@redis).to receive(:call).with("EXPIRE", any_args)
+      allow(@redis).to receive(:call).with("ZSCORE", anything, "42").and_return("10")
+      allow(@redis).to receive(:call).with("ZSCORE", anything, "7").and_return("3")
+      allow(@redis).to receive(:call).with("ZSCORE", anything, "99").and_return(nil)
+    end
+
+    it "returns a hash of id => count for given ids" do
+      result = Article.hit_counts(:views, ids: [42, 7], days: 7)
+      expect(result).to eq("42" => 10, "7" => 3)
+    end
+
+    it "returns 0 for ids with no hits" do
+      result = Article.hit_counts(:views, ids: [99], days: 7)
+      expect(result).to eq("99" => 0)
+    end
+  end
+
   describe ".top" do
     before do
       allow(@redis).to receive(:call).with("ZUNIONSTORE", any_args).and_return(7)

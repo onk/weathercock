@@ -11,6 +11,23 @@ module Weathercock
 
     module ClassMethods
       def top(event, decay_factor: nil, **window)
+        dest = weathercock_union(event, window, decay_factor: decay_factor)
+        Weathercock.config.redis.call("ZREVRANGE", dest, 0, -1)
+      end
+
+      def hit_counts(event, ids:, **window)
+        dest = weathercock_union(event, window)
+        redis = Weathercock.config.redis
+        ids.map { |id| [id.to_s, (redis.call("ZSCORE", dest, id.to_s) || "0").to_i] }.to_h
+      end
+
+      def weathercock_base_key(event)
+        "#{Weathercock.config.namespace}:#{name.gsub("::", "_").downcase}:#{event}"
+      end
+
+      private
+
+      def weathercock_union(event, window, decay_factor: nil)
         redis = Weathercock.config.redis
         base = weathercock_base_key(event)
         now = Time.now
@@ -31,11 +48,7 @@ module Weathercock
         zunionstore_args += ["WEIGHTS", *weights] if weights
         redis.call(*zunionstore_args)
         redis.call("EXPIRE", dest, 900)
-        redis.call("ZREVRANGE", dest, 0, -1)
-      end
-
-      def weathercock_base_key(event)
-        "#{Weathercock.config.namespace}:#{name.gsub("::", "_").downcase}:#{event}"
+        dest
       end
     end
 
@@ -49,6 +62,12 @@ module Weathercock
         p.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m-%d")}", increment, id.to_s)
         p.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m")}", increment, id.to_s)
       end
+    end
+
+    def hit_count(event, **window)
+      dest = self.class.send(:weathercock_union, event, window)
+      score = Weathercock.config.redis.call("ZSCORE", dest, id.to_s)
+      score ? score.to_i : 0
     end
   end
 end
