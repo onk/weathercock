@@ -12,7 +12,7 @@ module Weathercock
     module ClassMethods
       def top(event, decay_factor: nil, **window)
         dest = weathercock_union(event, window, decay_factor: decay_factor)
-        Weathercock.config.redis.call("ZREVRANGE", dest, 0, -1)
+        Weathercock.config.redis.call("ZRANGE", dest, 0, -1, "REV")
       end
 
       def hit_counts(event, ids:, **window)
