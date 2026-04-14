@@ -8,6 +8,9 @@ AllCops:
 Layout/LineLength:
   Max: 160
 
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+
 Style/Documentation:
   Enabled: false
 
