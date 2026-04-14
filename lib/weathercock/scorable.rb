@@ -10,21 +10,22 @@ module Weathercock
     end
 
     module ClassMethods
-      def top(event, hours: nil, days: nil, months: nil)
+      def top(event, **window)
         redis = Weathercock.config.redis
         base = weathercock_base_key(event)
         now = Time.now
+        type, count = window.first
 
-        keys = if hours
-          hours.times.map { |i| "#{base}:#{(now - i * 3600).strftime("%Y-%m-%d-%H")}" }
-        elsif days
-          days.times.map { |i| "#{base}:#{(now - i * 86400).strftime("%Y-%m-%d")}" }
-        elsif months
+        keys = if type == :hours
+          count.times.map { |i| "#{base}:#{(now - i * 3600).strftime("%Y-%m-%d-%H")}" }
+        elsif type == :days
+          count.times.map { |i| "#{base}:#{(now - i * 86400).strftime("%Y-%m-%d")}" }
+        elsif type == :months
           d = Date.new(now.year, now.month)
-          months.times.map { |i| "#{base}:#{(d << i).strftime("%Y-%m")}" }
+          count.times.map { |i| "#{base}:#{(d << i).strftime("%Y-%m")}" }
         end
 
-        dest = "#{base}:top"
+        dest = "#{base}:top:#{type}:#{count}"
         redis.call("ZUNIONSTORE", dest, keys.size, *keys)
         redis.call("EXPIRE", dest, 900)
         redis.call("ZREVRANGE", dest, 0, -1)

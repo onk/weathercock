@@ -97,7 +97,7 @@ RSpec.describe Weathercock::Scorable do
 
     it "sets 15 min TTL on the temp key" do
       Article.top(:views, days: 7)
-      expect(@redis).to have_received(:call).with("EXPIRE", "weathercock:article:views:top", 900)
+      expect(@redis).to have_received(:call).with("EXPIRE", "weathercock:article:views:top:days:7", 900)
     end
 
     it "returns ids in descending order" do
