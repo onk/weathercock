@@ -10,7 +10,7 @@ module Weathercock
     end
 
     module ClassMethods
-      def top(event, **window)
+      def top(event, decay_factor: nil, **window)
         redis = Weathercock.config.redis
         base = weathercock_base_key(event)
         now = Time.now
@@ -26,7 +26,10 @@ module Weathercock
         end
 
         dest = "#{base}:top:#{type}:#{count}"
-        redis.call("ZUNIONSTORE", dest, keys.size, *keys)
+        weights = decay_factor ? count.times.map { |i| (decay_factor**i).round(10) } : nil
+        zunionstore_args = ["ZUNIONSTORE", dest, keys.size, *keys]
+        zunionstore_args += ["WEIGHTS", *weights] if weights
+        redis.call(*zunionstore_args)
         redis.call("EXPIRE", dest, 900)
         redis.call("ZREVRANGE", dest, 0, -1)
       end

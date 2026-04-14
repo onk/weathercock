@@ -59,6 +59,9 @@ Article.top(:views, days: 7)
 # Using hours or months
 Article.top(:views, hours: 24)
 Article.top(:views, months: 3)
+
+# Exponential time decay (recent hits weighted higher)
+Article.top(:views, days: 7, decay_factor: 0.9)
 ```
 
 ## Development

@@ -104,5 +104,16 @@ RSpec.describe Weathercock::Scorable do
       result = Article.top(:views, days: 7)
       expect(result).to eq(["42", "7", "133"])
     end
+
+    it "applies exponential decay weights when decay_factor is given" do
+      Article.top(:views, hours: 3, decay_factor: 0.9)
+      expect(@redis).to have_received(:call).with(
+        "ZUNIONSTORE", anything, 3,
+        "weathercock:article:views:2026-04-15-09",
+        "weathercock:article:views:2026-04-15-08",
+        "weathercock:article:views:2026-04-15-07",
+        "WEIGHTS", 1.0, 0.9, 0.81
+      )
+    end
   end
 end
