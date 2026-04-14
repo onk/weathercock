@@ -38,23 +38,26 @@ article.hit(:views)
 article.hit(:views, increment: 5)
 ```
 
-Each call writes to three Sorted Sets:
+Each call writes to four Sorted Sets:
 
 ```
-myapp:article:views:2026-04-15-09   # hourly
-myapp:article:views:2026-04-15      # daily
-myapp:article:views:2026-04         # monthly
+myapp:article:views:total           # all-time (no TTL)
+myapp:article:views:2026-04-15-09   # hourly   (TTL: 3 days)
+myapp:article:views:2026-04-15      # daily    (TTL: 90 days)
+myapp:article:views:2026-04         # monthly  (TTL: 3 years)
 ```
 
 ### Ranking
 
-`top` aggregates time-window Sorted Sets via `ZUNIONSTORE` and returns IDs ordered by total score.
+`top` returns IDs ordered by total score. Without a window, it reads from the all-time key. With a window, it aggregates via `ZUNIONSTORE`.
 
 ```ruby
-# Top article IDs by views over the last 7 days
-# Runs ZUNIONSTORE over 7 daily Sorted Sets
-Article.top(:views, days: 7)
+# All-time ranking
+Article.top(:views)
 # => ["42", "7", "133", ...]
+
+# Top article IDs by views over the last 7 days
+Article.top(:views, days: 7)
 
 # Using hours or months
 Article.top(:views, hours: 24)
@@ -66,9 +69,10 @@ Article.top(:views, days: 7, decay_factor: 0.9)
 
 ### Counting
 
-Get the total hit count for a single instance over a time window:
+Get the hit count for a single instance:
 
 ```ruby
+article.hit_count(:views)         # all-time
 article.hit_count(:views, days: 7)
 # => 42
 ```
@@ -76,6 +80,7 @@ article.hit_count(:views, days: 7)
 Get hit counts for multiple instances at once (useful for list views):
 
 ```ruby
+Article.hit_counts(:views, ids: [1, 2, 3])          # all-time
 Article.hit_counts(:views, ids: [1, 2, 3], days: 7)
 # => {"1" => 42, "2" => 15, "3" => 7}
 ```

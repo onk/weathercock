@@ -26,6 +26,11 @@ RSpec.describe Weathercock::Scorable do
       expect(redis.call("ZSCORE", "weathercock:blog_article:views:2026-04-15-09", "1")).to eq(1.0)
     end
 
+    it "writes to total key" do
+      @article.hit(:views, increment: 3)
+      expect(redis.call("ZSCORE", "weathercock:article:views:total", "42")).to eq(3.0)
+    end
+
     it "writes to hourly key" do
       @article.hit(:views)
       expect(redis.call("ZSCORE", "weathercock:article:views:2026-04-15-09", "42")).to eq(1.0)
@@ -71,6 +76,15 @@ RSpec.describe Weathercock::Scorable do
     it "returns 0 when no hits recorded" do
       expect(@article.hit_count(:views, days: 7)).to eq(0)
     end
+
+    it "returns cumulative count when no window given" do
+      @article.hit(:views, increment: 5)
+      expect(@article.hit_count(:views)).to eq(5)
+    end
+
+    it "returns 0 for cumulative count when no hits recorded" do
+      expect(@article.hit_count(:views)).to eq(0)
+    end
   end
 
   describe ".hit_counts" do
@@ -95,6 +109,11 @@ RSpec.describe Weathercock::Scorable do
       result = Article.hit_counts(:views, ids: [99], days: 7)
       expect(result).to eq("99" => 0)
     end
+
+    it "returns cumulative counts when no window given" do
+      result = Article.hit_counts(:views, ids: [42, 7])
+      expect(result).to eq("42" => 2, "7" => 1)
+    end
   end
 
   describe ".top" do
@@ -109,6 +128,11 @@ RSpec.describe Weathercock::Scorable do
       Article.new(42).hit(:views, increment: 2)
       Article.new(7).hit(:views)
       Article.new(133).hit(:views, increment: 3)
+    end
+
+    it "returns all-time ranking when no window given" do
+      result = Article.top(:views)
+      expect(result).to eq(["133", "42", "7"])
     end
 
     it "unions last N daily keys" do

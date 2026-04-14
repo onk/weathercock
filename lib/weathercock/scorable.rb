@@ -17,13 +17,15 @@ module Weathercock
 
     module ClassMethods
       def top(event, decay_factor: nil, **window)
+        return Weathercock.config.redis.call("ZRANGE", "#{weathercock_base_key(event)}:total", 0, -1, "REV") if window.empty?
+
         dest = weathercock_union(event, window, decay_factor: decay_factor)
         Weathercock.config.redis.call("ZRANGE", dest, 0, -1, "REV")
       end
 
       def hit_counts(event, ids:, **window)
-        dest = weathercock_union(event, window)
         redis = Weathercock.config.redis
+        dest = window.empty? ? "#{weathercock_base_key(event)}:total" : weathercock_union(event, window)
         ids.to_h { |id| [id.to_s, (redis.call("ZSCORE", dest, id.to_s) || "0").to_i] }
       end
 
@@ -76,6 +78,7 @@ module Weathercock
       base = self.class.weathercock_base_key(event)
 
       redis.pipelined do |p|
+        p.call("ZINCRBY", "#{base}:total", increment, id.to_s)
         WEATHERCOCK_BUCKET_TTLS.each do |type, ttl|
           key = self.class.send(:weathercock_bucket_key, base, type, now)
           p.call("ZINCRBY", key, increment, id.to_s)
@@ -85,6 +88,11 @@ module Weathercock
     end
 
     def hit_count(event, **window)
+      if window.empty?
+        score = Weathercock.config.redis.call("ZSCORE", "#{self.class.weathercock_base_key(event)}:total", id.to_s)
+        return score ? score.to_i : 0
+      end
+
       dest = self.class.send(:weathercock_union, event, window)
       score = Weathercock.config.redis.call("ZSCORE", dest, id.to_s)
       score ? score.to_i : 0
