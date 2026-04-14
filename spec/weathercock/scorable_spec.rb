@@ -45,6 +45,21 @@ RSpec.describe Weathercock::Scorable do
       @article.hit(:views, increment: 5)
       expect(redis.call("ZSCORE", "weathercock:article:views:2026-04-15", "42")).to eq(5.0)
     end
+
+    it "sets TTL on hourly key" do
+      @article.hit(:views)
+      expect(redis.call("TTL", "weathercock:article:views:2026-04-15-09")).to eq(3 * 24 * 3600)
+    end
+
+    it "sets TTL on daily key" do
+      @article.hit(:views)
+      expect(redis.call("TTL", "weathercock:article:views:2026-04-15")).to eq(3 * 30 * 86400)
+    end
+
+    it "sets TTL on monthly key" do
+      @article.hit(:views)
+      expect(redis.call("TTL", "weathercock:article:views:2026-04")).to eq(3 * 12 * 30 * 86400)
+    end
   end
 
   describe "#hit_count" do

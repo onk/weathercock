@@ -5,6 +5,12 @@ require_relative "../weathercock"
 
 module Weathercock
   module Scorable
+    WEATHERCOCK_BUCKET_TTLS = {
+      hours: 3 * 24 * 3600,
+      days: 3 * 30 * 86400,
+      months: 3 * 12 * 30 * 86400
+    }.freeze
+
     def self.included(base)
       base.extend(ClassMethods)
     end
@@ -46,12 +52,20 @@ module Weathercock
         now = Time.now
         case type
         when :hours
-          count.times.map { |i| "#{base}:#{(now - (i * 3600)).strftime("%Y-%m-%d-%H")}" }
+          count.times.map { |i| weathercock_bucket_key(base, type, now - (i * 3600)) }
         when :days
-          count.times.map { |i| "#{base}:#{(now - (i * 86400)).strftime("%Y-%m-%d")}" }
+          count.times.map { |i| weathercock_bucket_key(base, type, now - (i * 86400)) }
         when :months
           d = Date.new(now.year, now.month)
-          count.times.map { |i| "#{base}:#{(d << i).strftime("%Y-%m")}" }
+          count.times.map { |i| weathercock_bucket_key(base, type, d << i) }
+        end
+      end
+
+      def weathercock_bucket_key(base, type, time)
+        case type
+        when :hours  then "#{base}:#{time.strftime("%Y-%m-%d-%H")}"
+        when :days   then "#{base}:#{time.strftime("%Y-%m-%d")}"
+        when :months then "#{base}:#{time.strftime("%Y-%m")}"
         end
       end
     end
@@ -62,9 +76,11 @@ module Weathercock
       base = self.class.weathercock_base_key(event)
 
       redis.pipelined do |p|
-        p.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m-%d-%H")}", increment, id.to_s)
-        p.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m-%d")}", increment, id.to_s)
-        p.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m")}", increment, id.to_s)
+        WEATHERCOCK_BUCKET_TTLS.each do |type, ttl|
+          key = self.class.send(:weathercock_bucket_key, base, type, now)
+          p.call("ZINCRBY", key, increment, id.to_s)
+          p.call("EXPIRE", key, ttl)
+        end
       end
     end
 
