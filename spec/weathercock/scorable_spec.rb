@@ -53,4 +53,30 @@ RSpec.describe Weathercock::Scorable do
       expect(@pipeline).to have_received(:call).with("ZINCRBY","weathercock:article:views:2026-04-15", 5, "42")
     end
   end
+
+  describe ".top" do
+    before do
+      allow(@redis).to receive(:call).with("ZUNIONSTORE", any_args).and_return(7)
+      allow(@redis).to receive(:call).with("ZREVRANGE", any_args).and_return(["42", "7", "133"])
+    end
+
+    it "unions last N daily keys" do
+      Article.top(:views, days: 7)
+      expect(@redis).to have_received(:call).with(
+        "ZUNIONSTORE", anything, 7,
+        "weathercock:article:views:2026-04-15",
+        "weathercock:article:views:2026-04-14",
+        "weathercock:article:views:2026-04-13",
+        "weathercock:article:views:2026-04-12",
+        "weathercock:article:views:2026-04-11",
+        "weathercock:article:views:2026-04-10",
+        "weathercock:article:views:2026-04-09"
+      )
+    end
+
+    it "returns ids in descending order" do
+      result = Article.top(:views, days: 7)
+      expect(result).to eq(["42", "7", "133"])
+    end
+  end
 end
