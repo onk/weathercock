@@ -16,11 +16,12 @@ module Weathercock
     end
 
     module ClassMethods
-      def top(event, decay_factor: nil, **window)
-        return Weathercock.config.redis.call("ZRANGE", "#{weathercock_base_key(event)}:total", 0, -1, "REV") if window.empty?
+      def top(event, limit:, decay_factor: nil, **window)
+        stop = limit ? limit - 1 : -1
+        return Weathercock.config.redis.call("ZRANGE", "#{weathercock_base_key(event)}:total", 0, stop, "REV") if window.empty?
 
         dest = weathercock_union(event, window, decay_factor: decay_factor)
-        Weathercock.config.redis.call("ZRANGE", dest, 0, -1, "REV")
+        Weathercock.config.redis.call("ZRANGE", dest, 0, stop, "REV")
       end
 
       def hit_counts(event, ids:, **window)

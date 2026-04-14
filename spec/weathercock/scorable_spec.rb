@@ -131,36 +131,44 @@ RSpec.describe Weathercock::Scorable do
     end
 
     it "returns all-time ranking when no window given" do
-      result = Article.top(:views)
+      result = Article.top(:views, limit: nil)
       expect(result).to eq(["133", "42", "7"])
     end
 
     it "unions last N daily keys" do
-      result = Article.top(:views, days: 7)
+      result = Article.top(:views, days: 7, limit: nil)
       expect(result).to eq(["133", "42", "7"])
     end
 
     it "unions last N hourly keys" do
-      result = Article.top(:views, hours: 24)
+      result = Article.top(:views, hours: 24, limit: nil)
       expect(result).to eq(["133", "42", "7"])
     end
 
     it "unions last N monthly keys" do
-      result = Article.top(:views, months: 3)
+      result = Article.top(:views, months: 3, limit: nil)
       expect(result).to eq(["133", "42", "7"])
     end
 
     it "sets 15 min TTL on the temp key" do
-      Article.top(:views, days: 7)
+      Article.top(:views, days: 7, limit: nil)
       ttl = redis.call("TTL", "weathercock:article:views:top:days:7")
       expect(ttl).to eq(900)
+    end
+
+    it "limits the number of results when limit is given" do
+      expect(Article.top(:views, limit: 2)).to eq(["133", "42"])
+    end
+
+    it "limits the number of results with a window when limit is given" do
+      expect(Article.top(:views, days: 7, limit: 2)).to eq(["133", "42"])
     end
 
     it "applies exponential decay weights when decay_factor is given" do
       # hour 0 (09:00): weight 1.0, hour 2 (07:00): weight 0.81
       Timecop.freeze(Time.new(2026, 4, 15, 7, 0, 0)) { Article.new(1).hit(:views, increment: 10) }
       Timecop.freeze(Time.new(2026, 4, 15, 9, 0, 0)) { Article.new(2).hit(:views, increment: 10) }
-      Article.top(:views, hours: 3, decay_factor: 0.9)
+      Article.top(:views, hours: 3, decay_factor: 0.9, limit: nil)
       dest = "weathercock:article:views:top:hours:3"
       expect(redis.call("ZSCORE", dest, "2").to_f).to eq(10.0)
       expect(redis.call("ZSCORE", dest, "1").to_f).to be_within(0.001).of(8.1)
