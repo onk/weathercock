@@ -93,7 +93,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/weathercock.
+Bug reports and pull requests are welcome on GitHub at https://github.com/onk/weathercock.
 
 ## License
 
