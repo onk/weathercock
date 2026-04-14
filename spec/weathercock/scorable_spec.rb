@@ -22,6 +22,15 @@ RSpec.describe Weathercock::Scorable do
   end
 
   describe "#hit" do
+    it "uses underscored qualified class name in the key" do
+      stub_const("Blog::Article", Class.new do
+        include Weathercock::Scorable
+        def id = 1
+      end)
+      Blog::Article.new.hit(:views)
+      expect(@redis).to have_received(:call).with("ZINCRBY", "weathercock:blog_article:views:2026-04-15-09", 1, "1")
+    end
+
     it "writes to hourly key" do
       @article.hit(:views)
       expect(@redis).to have_received(:call).with("ZINCRBY", "weathercock:article:views:2026-04-15-09", 1, "42")
