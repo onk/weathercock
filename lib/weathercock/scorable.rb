@@ -10,9 +10,11 @@ module Weathercock
       redis = Weathercock.config.redis
       base = "#{ns}:#{self.class.name.gsub("::", "_").downcase}:#{event}"
 
-      redis.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m-%d-%H")}", increment, id.to_s)
-      redis.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m-%d")}", increment, id.to_s)
-      redis.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m")}", increment, id.to_s)
+      redis.pipelined do |p|
+        p.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m-%d-%H")}", increment, id.to_s)
+        p.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m-%d")}", increment, id.to_s)
+        p.call("ZINCRBY", "#{base}:#{now.strftime("%Y-%m")}", increment, id.to_s)
+      end
     end
   end
 end
