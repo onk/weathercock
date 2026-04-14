@@ -1,5 +1,3 @@
-inherit_from: .rubocop_todo.yml
-
 AllCops:
   TargetRubyVersion: 3.2
   NewCops: enable
@@ -28,3 +26,14 @@ Style/StringLiterals:
 
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
+
+# RSpec describe blocks are intentionally long; splitting them provides no benefit.
+Metrics/BlockLength:
+  AllowedPatterns:
+    - describe
+
+Metrics/AbcSize:
+  Max: 20
+
+Metrics/MethodLength:
+  Max: 20

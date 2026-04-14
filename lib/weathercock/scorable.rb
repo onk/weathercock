@@ -30,18 +30,8 @@ module Weathercock
       def weathercock_union(event, window, decay_factor: nil)
         redis = Weathercock.config.redis
         base = weathercock_base_key(event)
-        now = Time.now
         type, count = window.first
-
-        keys = case type
-               when :hours
-                 count.times.map { |i| "#{base}:#{(now - (i * 3600)).strftime("%Y-%m-%d-%H")}" }
-               when :days
-                 count.times.map { |i| "#{base}:#{(now - (i * 86400)).strftime("%Y-%m-%d")}" }
-               when :months
-                 d = Date.new(now.year, now.month)
-                 count.times.map { |i| "#{base}:#{(d << i).strftime("%Y-%m")}" }
-               end
+        keys = weathercock_window_keys(base, type, count)
 
         dest = "#{base}:top:#{type}:#{count}"
         weights = decay_factor ? count.times.map { |i| (decay_factor**i).round(10) } : nil
@@ -50,6 +40,19 @@ module Weathercock
         redis.call(*zunionstore_args)
         redis.call("EXPIRE", dest, 900)
         dest
+      end
+
+      def weathercock_window_keys(base, type, count)
+        now = Time.now
+        case type
+        when :hours
+          count.times.map { |i| "#{base}:#{(now - (i * 3600)).strftime("%Y-%m-%d-%H")}" }
+        when :days
+          count.times.map { |i| "#{base}:#{(now - (i * 86400)).strftime("%Y-%m-%d")}" }
+        when :months
+          d = Date.new(now.year, now.month)
+          count.times.map { |i| "#{base}:#{(d << i).strftime("%Y-%m")}" }
+        end
       end
     end
 
