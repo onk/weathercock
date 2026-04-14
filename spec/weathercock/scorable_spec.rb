@@ -45,5 +45,10 @@ RSpec.describe Weathercock::Scorable do
       @article.hit(:views)
       expect(@redis).to have_received(:call).with("ZINCRBY", "weathercock:article:views:2026-04", 1, "42")
     end
+
+    it "accepts increment option" do
+      @article.hit(:views, increment: 5)
+      expect(@redis).to have_received(:call).with("ZINCRBY", "weathercock:article:views:2026-04-15", 5, "42")
+    end
   end
 end
