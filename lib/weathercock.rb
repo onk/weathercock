@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "weathercock/version"
+require_relative "weathercock/scorable"
 
 module Weathercock
   class Error < StandardError; end
