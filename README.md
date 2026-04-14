@@ -1,28 +1,65 @@
 # Weathercock
 
-TODO: Delete this and the text below, and describe your gem
+Hit counter and popularity tracking using Valkey/Redis Sorted Sets.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/weathercock`. To experiment with that code, run `bin/console` for an interactive prompt.
+Records hit counts for arbitrary resources across hourly, daily, and monthly time windows. Aggregates them with `ZUNIONSTORE` to build popularity rankings.
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
-Install the gem and add to the application's Gemfile by executing:
-
 ```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
-```
-
-If bundler is not being used to manage dependencies, install the gem by executing:
-
-```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+bundle add weathercock
 ```
 
 ## Usage
 
-TODO: Write usage instructions here
+### Configuration
+
+```ruby
+Weathercock.configure do |c|
+  c.redis     = RedisClient.new(host: "localhost", port: 6379)
+  c.namespace = "myapp"  # default: "weathercock"
+end
+```
+
+### Tracking
+
+Include `Weathercock::Scorable` in any class that has an `id`:
+
+```ruby
+class Article
+  include Weathercock::Scorable
+end
+```
+
+Record a hit:
+
+```ruby
+article.hit(:views)
+article.hit(:views, increment: 5)
+```
+
+Each call writes to three Sorted Sets:
+
+```
+myapp:article:views:2026-04-15-09   # hourly
+myapp:article:views:2026-04-15      # daily
+myapp:article:views:2026-04         # monthly
+```
+
+### Ranking
+
+`top` aggregates time-window Sorted Sets via `ZUNIONSTORE` and returns IDs ordered by total score.
+
+```ruby
+# Top article IDs by views over the last 7 days
+# Runs ZUNIONSTORE over 7 daily Sorted Sets
+Article.top(:views, days: 7)
+# => ["42", "7", "133", ...]
+
+# Using hours or months
+Article.top(:views, hours: 24)
+Article.top(:views, months: 3)
+```
 
 ## Development
 
