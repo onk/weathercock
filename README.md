@@ -53,18 +53,21 @@ myapp:article:views:2026-04         # monthly  (TTL: 3 years)
 
 ```ruby
 # All-time ranking
-Article.top(:views)
+Article.top(:views, limit: 10)
 # => ["42", "7", "133", ...]
 
 # Top article IDs by views over the last 7 days
-Article.top(:views, days: 7)
+Article.top(:views, days: 7, limit: 10)
 
 # Using hours or months
-Article.top(:views, hours: 24)
-Article.top(:views, months: 3)
+Article.top(:views, hours: 24, limit: 10)
+Article.top(:views, months: 3, limit: 10)
 
 # Exponential time decay (recent hits weighted higher)
-Article.top(:views, days: 7, decay_factor: 0.9)
+Article.top(:views, days: 7, decay_factor: 0.9, limit: 10)
+
+# Retrieve all results
+Article.top(:views, limit: nil)
 ```
 
 ### Counting
