@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../weathercock"
 require_relative "key_builder"
 
 module Weathercock
