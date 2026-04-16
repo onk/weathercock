@@ -3,6 +3,12 @@ AllCops:
   NewCops: enable
   SuggestExtensions: false
 
+# Compared to special_inside_parentheses (default):
+# * Less likely to cause long lines
+# * Fewer diff lines when method name length changes
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+
 Layout/LineLength:
   Max: 160
 
