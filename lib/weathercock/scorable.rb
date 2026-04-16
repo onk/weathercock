@@ -8,24 +8,24 @@ module Weathercock
 
     module ClassMethods
       def weathercock_scorer
-        @weathercock_scorer ||= Scorer.new
+        @weathercock_scorer ||= Scorer.new(klass: self)
       end
 
       def top(event, limit:, decay_factor: nil, **window)
-        weathercock_scorer.top(self, event, limit: limit, decay_factor: decay_factor, **window)
+        weathercock_scorer.top(event, limit: limit, decay_factor: decay_factor, **window)
       end
 
       def hit_counts(event, ids:, **window)
-        weathercock_scorer.hit_counts(self, event, ids: ids, **window)
+        weathercock_scorer.hit_counts(event, ids: ids, **window)
       end
     end
 
     def hit(event, increment: 1)
-      self.class.weathercock_scorer.hit(self.class, id, event, increment: increment)
+      self.class.weathercock_scorer.hit(id, event, increment: increment)
     end
 
     def hit_count(event, **window)
-      self.class.weathercock_scorer.hit_count(self.class, id, event, **window)
+      self.class.weathercock_scorer.hit_count(id, event, **window)
     end
   end
 end

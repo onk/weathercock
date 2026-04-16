@@ -8,14 +8,14 @@ module Weathercock
       months: 3 * 12 * 30 * 86400
     }.freeze
 
-    def initialize
+    def initialize(klass:)
       @redis = Weathercock.config.redis
-      @key_builder = KeyBuilder.new(namespace: Weathercock.config.namespace)
+      @key_builder = KeyBuilder.new(namespace: Weathercock.config.namespace, klass: klass)
     end
 
-    def hit(klass, id, event, increment: 1)
+    def hit(id, event, increment: 1)
       now = Time.now
-      base = @key_builder.base(klass, event)
+      base = @key_builder.base(event)
 
       @redis.pipelined do |p|
         p.call("ZINCRBY", @key_builder.total(base), increment, id.to_s)
@@ -27,37 +27,37 @@ module Weathercock
       end
     end
 
-    def hit_count(klass, id, event, **window)
-      base = @key_builder.base(klass, event)
+    def hit_count(id, event, **window)
+      base = @key_builder.base(event)
       if window.empty?
         score = @redis.call("ZSCORE", @key_builder.total(base), id.to_s)
         return score ? score.to_i : 0
       end
 
-      dest = union(klass, event, window)
+      dest = union(event, window)
       score = @redis.call("ZSCORE", dest, id.to_s)
       score ? score.to_i : 0
     end
 
-    def top(klass, event, limit:, decay_factor: nil, **window)
-      base = @key_builder.base(klass, event)
+    def top(event, limit:, decay_factor: nil, **window)
+      base = @key_builder.base(event)
       stop = limit ? limit - 1 : -1
       return @redis.call("ZRANGE", @key_builder.total(base), 0, stop, "REV") if window.empty?
 
-      dest = union(klass, event, window, decay_factor: decay_factor)
+      dest = union(event, window, decay_factor: decay_factor)
       @redis.call("ZRANGE", dest, 0, stop, "REV")
     end
 
-    def hit_counts(klass, event, ids:, **window)
-      base = @key_builder.base(klass, event)
-      dest = window.empty? ? @key_builder.total(base) : union(klass, event, window)
+    def hit_counts(event, ids:, **window)
+      base = @key_builder.base(event)
+      dest = window.empty? ? @key_builder.total(base) : union(event, window)
       ids.to_h { |id| [id.to_s, (@redis.call("ZSCORE", dest, id.to_s) || "0").to_i] }
     end
 
     private
 
-    def union(klass, event, window, decay_factor: nil)
-      base = @key_builder.base(klass, event)
+    def union(event, window, decay_factor: nil)
+      base = @key_builder.base(event)
       type, count = window.first
       keys = @key_builder.window_keys(base, type, count)
       dest = @key_builder.union_dest(base, type, count)

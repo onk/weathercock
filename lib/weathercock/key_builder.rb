@@ -4,12 +4,13 @@ require "date"
 
 module Weathercock
   class KeyBuilder
-    def initialize(namespace:)
+    def initialize(namespace:, klass:)
       @namespace = namespace
+      @klass_key = klass.name.gsub("::", "_").downcase
     end
 
-    def base(klass, event)
-      "#{@namespace}:#{klass.name.gsub("::", "_").downcase}:#{event}"
+    def base(event)
+      "#{@namespace}:#{@klass_key}:#{event}"
     end
 
     def total(base)

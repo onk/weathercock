@@ -3,18 +3,16 @@
 require "weathercock/key_builder"
 
 RSpec.describe Weathercock::KeyBuilder do
-  let(:kb) { described_class.new(namespace: "wc") }
-
   before do
     Timecop.freeze(Time.new(2026, 4, 15, 9, 0, 0))
     stub_const("Blog::Article", Class.new)
   end
 
-  let(:klass) { Blog::Article }
+  let(:kb) { described_class.new(namespace: "wc", klass: Blog::Article) }
 
   describe "#base" do
     it "builds key with namespace and underscored class name" do
-      expect(kb.base(klass, :views)).to eq("wc:blog_article:views")
+      expect(kb.base(:views)).to eq("wc:blog_article:views")
     end
   end
 
