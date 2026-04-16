@@ -65,4 +65,10 @@ RSpec.describe Weathercock::KeyBuilder do
       ])
     end
   end
+
+  describe "#union_dest" do
+    it "builds destination key for union result" do
+      expect(kb.union_dest("wc:blog_article:views", :days, 7)).to eq("wc:blog_article:views:top:days:7")
+    end
+  end
 end

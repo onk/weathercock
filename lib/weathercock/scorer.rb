@@ -34,7 +34,7 @@ module Weathercock
         return score ? score.to_i : 0
       end
 
-      dest = @key_builder.union(@redis, klass, event, window)
+      dest = union(klass, event, window)
       score = @redis.call("ZSCORE", dest, id.to_s)
       score ? score.to_i : 0
     end
@@ -44,14 +44,30 @@ module Weathercock
       stop = limit ? limit - 1 : -1
       return @redis.call("ZRANGE", "#{base}:total", 0, stop, "REV") if window.empty?
 
-      dest = @key_builder.union(@redis, klass, event, window, decay_factor: decay_factor)
+      dest = union(klass, event, window, decay_factor: decay_factor)
       @redis.call("ZRANGE", dest, 0, stop, "REV")
     end
 
     def hit_counts(klass, event, ids:, **window)
       base = @key_builder.base(klass, event)
-      dest = window.empty? ? "#{base}:total" : @key_builder.union(@redis, klass, event, window)
+      dest = window.empty? ? "#{base}:total" : union(klass, event, window)
       ids.to_h { |id| [id.to_s, (@redis.call("ZSCORE", dest, id.to_s) || "0").to_i] }
+    end
+
+    private
+
+    def union(klass, event, window, decay_factor: nil)
+      base = @key_builder.base(klass, event)
+      type, count = window.first
+      keys = @key_builder.window_keys(base, type, count)
+      dest = @key_builder.union_dest(base, type, count)
+
+      weights = decay_factor ? count.times.map { |i| (decay_factor**i).round(10) } : nil
+      zunionstore_args = ["ZUNIONSTORE", dest, keys.size, *keys]
+      zunionstore_args += ["WEIGHTS", *weights] if weights
+      @redis.call(*zunionstore_args)
+      @redis.call("EXPIRE", dest, 900)
+      dest
     end
   end
 end

@@ -33,18 +33,8 @@ module Weathercock
       end
     end
 
-    def union(redis, klass, event, window, decay_factor: nil)
-      base = base(klass, event)
-      type, count = window.first
-      keys = window_keys(base, type, count)
-
-      dest = "#{base}:top:#{type}:#{count}"
-      weights = decay_factor ? count.times.map { |i| (decay_factor**i).round(10) } : nil
-      zunionstore_args = ["ZUNIONSTORE", dest, keys.size, *keys]
-      zunionstore_args += ["WEIGHTS", *weights] if weights
-      redis.call(*zunionstore_args)
-      redis.call("EXPIRE", dest, 900)
-      dest
+    def union_dest(base, type, count)
+      "#{base}:top:#{type}:#{count}"
     end
   end
 end
