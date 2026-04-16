@@ -12,6 +12,10 @@ module Weathercock
       "#{@namespace}:#{klass.name.gsub("::", "_").downcase}:#{event}"
     end
 
+    def total(base)
+      "#{base}:total"
+    end
+
     def bucket(base, type, time)
       case type
       when :hours  then "#{base}:#{time.strftime("%Y-%m-%d-%H")}"

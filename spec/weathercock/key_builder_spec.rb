@@ -18,6 +18,12 @@ RSpec.describe Weathercock::KeyBuilder do
     end
   end
 
+  describe "#total" do
+    it "builds total key" do
+      expect(kb.total("wc:blog_article:views")).to eq("wc:blog_article:views:total")
+    end
+  end
+
   describe "#bucket" do
     let(:base) { "wc:blog_article:views" }
     let(:time) { Time.new(2026, 4, 15, 9, 0, 0) }
