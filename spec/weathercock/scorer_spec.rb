@@ -46,17 +46,17 @@ RSpec.describe Weathercock::Scorer do
 
     it "sets TTL on hourly key" do
       scorer.hit(42, :views)
-      expect(redis.call("TTL", "weathercock:article:views:2026-04-15-09")).to eq(3 * 24 * 3600)
+      expect(redis.call("TTL", "weathercock:article:views:2026-04-15-09")).to eq(90 * 3600)
     end
 
     it "sets TTL on daily key" do
       scorer.hit(42, :views)
-      expect(redis.call("TTL", "weathercock:article:views:2026-04-15")).to eq(3 * 30 * 86400)
+      expect(redis.call("TTL", "weathercock:article:views:2026-04-15")).to eq(90 * 86400)
     end
 
     it "sets TTL on monthly key" do
       scorer.hit(42, :views)
-      expect(redis.call("TTL", "weathercock:article:views:2026-04")).to eq(3 * 12 * 30 * 86400)
+      expect(redis.call("TTL", "weathercock:article:views:2026-04")).to eq(90 * 30 * 86400)
     end
   end
 

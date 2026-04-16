@@ -2,10 +2,12 @@
 
 module Weathercock
   class Scorer
+    BUCKET_COUNT = 90
+
     BUCKET_TTLS = {
-      hours: 3 * 24 * 3600,
-      days: 3 * 30 * 86400,
-      months: 3 * 12 * 30 * 86400
+      hours: BUCKET_COUNT * 3600,
+      days: BUCKET_COUNT * 86400,
+      months: BUCKET_COUNT * 30 * 86400
     }.freeze
 
     def initialize(klass:)
