@@ -13,6 +13,12 @@ RSpec.describe Weathercock::Scorer do
   end
 
   describe "#hit" do
+    it "uses underscored qualified class name in the key" do
+      stub_const("Blog::Article", Class.new)
+      scorer.hit(Blog::Article, 1, :views)
+      expect(redis.call("ZSCORE", "weathercock:blog_article:views:2026-04-15-09", "1")).to eq(1.0)
+    end
+
     it "writes to total key" do
       scorer.hit(klass, 42, :views, increment: 3)
       expect(redis.call("ZSCORE", "weathercock:article:views:total", "42")).to eq(3.0)
@@ -31,6 +37,11 @@ RSpec.describe Weathercock::Scorer do
     it "writes to monthly key" do
       scorer.hit(klass, 42, :views)
       expect(redis.call("ZSCORE", "weathercock:article:views:2026-04", "42")).to eq(1.0)
+    end
+
+    it "accepts increment option" do
+      scorer.hit(klass, 42, :views, increment: 5)
+      expect(redis.call("ZSCORE", "weathercock:article:views:2026-04-15", "42")).to eq(5.0)
     end
 
     it "sets TTL on hourly key" do
@@ -103,13 +114,33 @@ RSpec.describe Weathercock::Scorer do
       expect(result).to eq(["133", "42", "7"])
     end
 
+    it "unions last N hourly keys" do
+      result = scorer.top(klass, :views, hours: 24, limit: nil)
+      expect(result).to eq(["133", "42", "7"])
+    end
+
     it "unions last N daily keys" do
       result = scorer.top(klass, :views, days: 7, limit: nil)
       expect(result).to eq(["133", "42", "7"])
     end
 
+    it "unions last N monthly keys" do
+      result = scorer.top(klass, :views, months: 3, limit: nil)
+      expect(result).to eq(["133", "42", "7"])
+    end
+
+    it "sets 15 min TTL on the temp key" do
+      scorer.top(klass, :views, days: 7, limit: nil)
+      ttl = redis.call("TTL", "weathercock:article:views:top:days:7")
+      expect(ttl).to eq(900)
+    end
+
     it "limits the number of results when limit is given" do
       expect(scorer.top(klass, :views, limit: 2)).to eq(["133", "42"])
+    end
+
+    it "limits the number of results with a window when limit is given" do
+      expect(scorer.top(klass, :views, days: 7, limit: 2)).to eq(["133", "42"])
     end
 
     it "applies exponential decay weights when decay_factor is given" do
