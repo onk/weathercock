@@ -51,7 +51,8 @@ module Weathercock
     def hit_counts(event, ids:, **window)
       base = @key_builder.base(event)
       dest = window.empty? ? @key_builder.total(base) : union(event, window)
-      ids.to_h { |id| [id.to_s, (@redis.call("ZSCORE", dest, id.to_s) || "0").to_i] }
+      scores = @redis.call("ZMSCORE", dest, *ids.map(&:to_s))
+      ids.zip(scores).to_h { |id, score| [id.to_s, (score || "0").to_i] }
     end
 
     private
