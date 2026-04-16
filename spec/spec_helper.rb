@@ -15,12 +15,15 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  redis = nil
+
   config.before(:suite) do
-    Weathercock.configure { |c| c.redis = RedisClient.new(host: "localhost", port: 6379) }
+    redis = RedisClient.new(host: "localhost", port: 6379)
+    Weathercock.configure { |c| c.redis = redis }
   end
 
   config.after do
     Timecop.return
-    Weathercock.config.redis.call("FLUSHDB")
+    redis.call("FLUSHDB")
   end
 end
