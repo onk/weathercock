@@ -8,9 +8,9 @@ module Weathercock
       months: 3 * 12 * 30 * 86400
     }.freeze
 
-    def initialize(redis: Weathercock.config.redis, namespace: Weathercock.config.namespace)
-      @redis = redis
-      @key_builder = KeyBuilder.new(namespace: namespace)
+    def initialize
+      @redis = Weathercock.config.redis
+      @key_builder = KeyBuilder.new(namespace: Weathercock.config.namespace)
     end
 
     def hit(klass, id, event, increment: 1)
