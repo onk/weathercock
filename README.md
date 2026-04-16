@@ -88,6 +88,26 @@ Article.hit_counts(:views, ids: [1, 2, 3], days: 7)
 # => {"1" => 42, "2" => 15, "3" => 7}
 ```
 
+### Ranking position
+
+Get the 1-indexed rank of a specific instance:
+
+```ruby
+article.rank(:views)          # all-time
+article.rank(:views, days: 7)
+# => 1
+```
+
+Returns `nil` if the item has no hits.
+
+### Removing hits
+
+Remove all recorded hits for an instance across all keys:
+
+```ruby
+article.remove_hits(:views)
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
