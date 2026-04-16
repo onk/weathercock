@@ -2,6 +2,7 @@
 
 require_relative "weathercock/version"
 require_relative "weathercock/key_builder"
+require_relative "weathercock/scorer"
 require_relative "weathercock/scorable"
 
 module Weathercock
