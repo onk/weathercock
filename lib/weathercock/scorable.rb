@@ -27,5 +27,9 @@ module Weathercock
     def hit_count(event, **window)
       self.class.weathercock_scorer.hit_count(id, event, **window)
     end
+
+    def remove_hits(event)
+      self.class.weathercock_scorer.remove_hits(id, event)
+    end
   end
 end

@@ -29,6 +29,19 @@ module Weathercock
       end
     end
 
+    def remove_hits(id, event)
+      base = @key_builder.base(event)
+
+      @redis.pipelined do |p|
+        p.call("ZREM", @key_builder.total(base), id.to_s)
+        BUCKET_TTLS.each_key do |type|
+          @key_builder.window_keys(base, type, BUCKET_COUNT).each do |key|
+            p.call("ZREM", key, id.to_s)
+          end
+        end
+      end
+    end
+
     def hit_count(id, event, **window)
       base = @key_builder.base(event)
       if window.empty?

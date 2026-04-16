@@ -60,6 +60,36 @@ RSpec.describe Weathercock::Scorer do
     end
   end
 
+  describe "#remove_hits" do
+    before { scorer.hit(42, :views) }
+
+    it "removes from total key" do
+      scorer.remove_hits(42, :views)
+      expect(redis.call("ZSCORE", "weathercock:article:views:total", "42")).to be_nil
+    end
+
+    it "removes from hourly key" do
+      scorer.remove_hits(42, :views)
+      expect(redis.call("ZSCORE", "weathercock:article:views:2026-04-15-09", "42")).to be_nil
+    end
+
+    it "removes from daily key" do
+      scorer.remove_hits(42, :views)
+      expect(redis.call("ZSCORE", "weathercock:article:views:2026-04-15", "42")).to be_nil
+    end
+
+    it "removes from monthly key" do
+      scorer.remove_hits(42, :views)
+      expect(redis.call("ZSCORE", "weathercock:article:views:2026-04", "42")).to be_nil
+    end
+
+    it "does not affect other members" do
+      scorer.hit(99, :views)
+      scorer.remove_hits(42, :views)
+      expect(redis.call("ZSCORE", "weathercock:article:views:total", "99")).to eq(1.0)
+    end
+  end
+
   describe "#hit_count" do
     it "returns score for the instance over a time window" do
       scorer.hit(42, :views)

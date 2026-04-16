@@ -40,6 +40,15 @@ RSpec.describe Weathercock::Scorable do
     end
   end
 
+  describe "#remove_hits" do
+    it "delegates to Scorer" do
+      article = Article.new(42)
+      article.hit(:views)
+      article.remove_hits(:views)
+      expect(article.hit_count(:views)).to eq(0)
+    end
+  end
+
   describe ".weathercock_scorer" do
     it "returns a Scorer instance" do
       expect(Article.weathercock_scorer).to be_a(Weathercock::Scorer)
