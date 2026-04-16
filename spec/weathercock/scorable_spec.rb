@@ -40,6 +40,16 @@ RSpec.describe Weathercock::Scorable do
     end
   end
 
+  describe "#rank" do
+    it "delegates to Scorer" do
+      Article.new(42).hit(:views, increment: 2)
+      Article.new(7).hit(:views)
+      expect(Article.new(42).rank(:views)).to eq(1)
+      expect(Article.new(7).rank(:views)).to eq(2)
+      expect(Article.new(999).rank(:views)).to be_nil
+    end
+  end
+
   describe "#remove_hits" do
     it "delegates to Scorer" do
       article = Article.new(42)

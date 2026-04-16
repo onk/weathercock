@@ -182,4 +182,27 @@ RSpec.describe Weathercock::Scorer do
       expect(redis.call("ZSCORE", dest, "1").to_f).to be_within(0.001).of(8.1)
     end
   end
+
+  describe "#rank" do
+    before do
+      scorer.hit(42, :views, increment: 2)
+      scorer.hit(7, :views)
+      scorer.hit(133, :views, increment: 3)
+    end
+
+    it "returns 1-indexed rank in all-time ranking" do
+      expect(scorer.rank(133, :views)).to eq(1)
+      expect(scorer.rank(42, :views)).to eq(2)
+      expect(scorer.rank(7, :views)).to eq(3)
+    end
+
+    it "returns nil for an item with no hits" do
+      expect(scorer.rank(999, :views)).to be_nil
+    end
+
+    it "returns rank over a time window" do
+      expect(scorer.rank(133, :views, days: 7)).to eq(1)
+      expect(scorer.rank(42, :views, days: 7)).to eq(2)
+    end
+  end
 end

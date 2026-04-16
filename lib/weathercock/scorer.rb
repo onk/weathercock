@@ -63,6 +63,13 @@ module Weathercock
       @redis.call("ZRANGE", dest, 0, stop, "REV")
     end
 
+    def rank(id, event, **window)
+      base = @key_builder.base(event)
+      dest = window.empty? ? @key_builder.total(base) : union(event, window)
+      r = @redis.call("ZREVRANK", dest, id.to_s)
+      r ? r + 1 : nil
+    end
+
     def hit_counts(event, ids:, **window)
       base = @key_builder.base(event)
       dest = window.empty? ? @key_builder.total(base) : union(event, window)

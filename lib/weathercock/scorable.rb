@@ -28,6 +28,10 @@ module Weathercock
       self.class.weathercock_scorer.hit_count(id, event, **window)
     end
 
+    def rank(event, **window)
+      self.class.weathercock_scorer.rank(id, event, **window)
+    end
+
     def remove_hits(event)
       self.class.weathercock_scorer.remove_hits(id, event)
     end
