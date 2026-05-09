@@ -1,6 +1,8 @@
 module Weathercock
   VERSION: String
 
+  type id = Integer | String
+
   class Error < StandardError
   end
 

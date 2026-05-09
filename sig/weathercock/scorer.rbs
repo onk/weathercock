@@ -4,17 +4,17 @@ class Weathercock::Scorer
 
   def initialize: (klass: Module) -> void
 
-  def hit: (Integer, Symbol, ?increment: Integer) -> void
+  def hit: (Weathercock::id, Symbol, ?increment: Integer) -> void
 
-  def hit_count: (Integer, Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer
+  def hit_count: (Weathercock::id, Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer
 
   def union: (Symbol, Hash[untyped, untyped], ?decay_factor: Float) -> String
 
   def top: (Symbol, limit: Integer?, ?decay_factor: Float, ?hours: Integer, ?days: Integer, ?months: Integer) -> Array[String]
 
-  def hit_counts: (Symbol, ids: Array[Integer | String], ?hours: Integer, ?days: Integer, ?months: Integer) -> Hash[String, Integer]
+  def hit_counts: (Symbol, ids: Array[Weathercock::id], ?hours: Integer, ?days: Integer, ?months: Integer) -> Hash[String, Integer]
 
-  def rank: (Integer, Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer?
+  def rank: (Weathercock::id, Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer?
 
-  def remove_hits: (Integer, Symbol) -> void
+  def remove_hits: (Weathercock::id, Symbol) -> void
 end

@@ -2,7 +2,8 @@ module Weathercock::Scorable
   def self.included: (Module) -> void
   def self.weathercock_scorer: () -> Weathercock::Scorer
 
-  def id: () -> untyped
+  # Expected to be provided by the including class (e.g. ActiveRecord).
+  def id: () -> Weathercock::id
 
   def hit: (Symbol, ?increment: Integer) -> void
 
@@ -18,5 +19,5 @@ module Weathercock::Scorable::ClassMethods : Module
 
   def top: (Symbol, limit: Integer?, ?decay_factor: Float, ?hours: Integer, ?days: Integer, ?months: Integer) -> Array[String]
 
-  def hit_counts: (Symbol, ids: Array[Integer | String], ?hours: Integer, ?days: Integer, ?months: Integer) -> Hash[String, Integer]
+  def hit_counts: (Symbol, ids: Array[Weathercock::id], ?hours: Integer, ?days: Integer, ?months: Integer) -> Hash[String, Integer]
 end
