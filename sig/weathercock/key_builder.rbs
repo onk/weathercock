@@ -5,10 +5,10 @@ class Weathercock::KeyBuilder
 
   def total: (String) -> String
 
-  def bucket: (String, Symbol, Time) -> String?
-            | (String, Symbol, Date) -> String?
+  def bucket: (String, :hours | :days, Time) -> String
+            | (String, :months, Date) -> String
 
-  def window_keys: (String, Symbol, Integer) -> Array[String?]?
+  def window_keys: (String, :hours | :days | :months, Integer) -> Array[String]
 
-  def union_dest: (String, Symbol, Integer) -> String
+  def union_dest: (String, :hours | :days | :months, Integer) -> String
 end
