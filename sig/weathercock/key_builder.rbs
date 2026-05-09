@@ -8,7 +8,7 @@ class Weathercock::KeyBuilder
   def bucket: (String, Symbol, Time) -> String?
             | (String, Symbol, Date) -> String?
 
-  def window_keys: (String, Symbol, Integer) -> Array[untyped]?
+  def window_keys: (String, Symbol, Integer) -> Array[String?]?
 
   def union_dest: (String, Symbol, Integer) -> String
 end

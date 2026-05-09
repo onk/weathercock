@@ -6,12 +6,9 @@ module Weathercock::Scorable
 
   def hit: (Symbol, ?increment: Integer) -> Array[untyped]
 
-  def hit_count: (Symbol, **nil) -> Integer
-               | (Symbol, **Integer) -> Integer
+  def hit_count: (Symbol, **Integer) -> Integer
 
-  def rank: (Symbol, **nil) -> Integer
-          | (Symbol, **nil) -> nil
-          | (Symbol, **Integer) -> Integer
+  def rank: (Symbol, **Integer) -> Integer?
 
   def remove_hits: (Symbol) -> Array[untyped]
 end
@@ -19,7 +16,7 @@ end
 module Weathercock::Scorable::ClassMethods
   def weathercock_scorer: () -> Weathercock::Scorer
 
-  def top: (Symbol, limit: Integer?, ?decay_factor: Float?, **untyped) -> Array[untyped]
+  def top: (Symbol, limit: Integer?, ?decay_factor: Float?, **untyped) -> Array[String]
 
-  def hit_counts: (Symbol, ids: Array[untyped], **untyped) -> Hash[untyped, untyped]
+  def hit_counts: (Symbol, ids: Array[untyped], **untyped) -> Hash[String, Integer]
 end
