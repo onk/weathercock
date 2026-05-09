@@ -4,7 +4,7 @@ class Weathercock::Scorer
 
   def initialize: (klass: Module) -> void
 
-  def hit: (Integer, Symbol, ?increment: Integer) -> Array[untyped]
+  def hit: (Integer, Symbol, ?increment: Integer) -> void
 
   def hit_count: (Integer, Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer
 
@@ -16,5 +16,5 @@ class Weathercock::Scorer
 
   def rank: (Integer, Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer?
 
-  def remove_hits: (Integer, Symbol) -> Array[untyped]
+  def remove_hits: (Integer, Symbol) -> void
 end

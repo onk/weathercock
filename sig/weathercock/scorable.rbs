@@ -4,13 +4,13 @@ module Weathercock::Scorable
 
   def id: () -> untyped
 
-  def hit: (Symbol, ?increment: Integer) -> Array[untyped]
+  def hit: (Symbol, ?increment: Integer) -> void
 
   def hit_count: (Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer
 
   def rank: (Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer?
 
-  def remove_hits: (Symbol) -> Array[untyped]
+  def remove_hits: (Symbol) -> void
 end
 
 module Weathercock::Scorable::ClassMethods : Module
