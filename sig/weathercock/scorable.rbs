@@ -18,5 +18,5 @@ module Weathercock::Scorable::ClassMethods : Module
 
   def top: (Symbol, limit: Integer?, ?decay_factor: Float, ?hours: Integer, ?days: Integer, ?months: Integer) -> Array[String]
 
-  def hit_counts: (Symbol, ids: Array[untyped], ?hours: Integer, ?days: Integer, ?months: Integer) -> Hash[String, Integer]
+  def hit_counts: (Symbol, ids: Array[Integer | String], ?hours: Integer, ?days: Integer, ?months: Integer) -> Hash[String, Integer]
 end

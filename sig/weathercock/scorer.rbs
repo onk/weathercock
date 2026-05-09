@@ -12,7 +12,7 @@ class Weathercock::Scorer
 
   def top: (Symbol, limit: Integer?, ?decay_factor: Float, ?hours: Integer, ?days: Integer, ?months: Integer) -> Array[String]
 
-  def hit_counts: (Symbol, ids: Array[untyped], ?hours: Integer, ?days: Integer, ?months: Integer) -> Hash[String, Integer]
+  def hit_counts: (Symbol, ids: Array[Integer | String], ?hours: Integer, ?days: Integer, ?months: Integer) -> Hash[String, Integer]
 
   def rank: (Integer, Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer?
 
