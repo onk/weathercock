@@ -1,14 +1,14 @@
 class Weathercock::KeyBuilder
-  def initialize: (namespace: String, klass: Class) -> void
+  def initialize: (namespace: String, klass: untyped) -> void
 
   def base: (Symbol) -> String
 
   def total: (String) -> String
 
-  def bucket: (String, Symbol, Time) -> String
-            | (String, Symbol, Date) -> String
+  def bucket: (String, Symbol, Time) -> String?
+            | (String, Symbol, Date) -> String?
 
-  def window_keys: (String, Symbol, Integer) -> Array[untyped]
+  def window_keys: (String, Symbol, Integer) -> Array[untyped]?
 
   def union_dest: (String, Symbol, Integer) -> String
 end
