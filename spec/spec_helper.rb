@@ -5,6 +5,16 @@ require "timecop"
 require "redis-client"
 
 RSpec.configure do |config|
+  if ENV.key?("TRACE")
+    require "rbs/trace"
+    trace = RBS::Trace.new
+    config.before(:suite) { trace.enable }
+    config.after(:suite) do
+      trace.disable
+      trace.save_files(out_dir: "sig/trace/")
+    end
+  end
+
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
 
