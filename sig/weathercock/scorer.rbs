@@ -2,7 +2,7 @@ class Weathercock::Scorer
   BUCKET_COUNT: Integer
   BUCKET_TTLS: Hash[:hours | :days | :months, Integer]
 
-  def initialize: (klass: untyped) -> void
+  def initialize: (klass: Module) -> void
 
   def hit: (Integer, Symbol, ?increment: Integer) -> Array[untyped]
 

@@ -1,5 +1,5 @@
 class Weathercock::KeyBuilder
-  def initialize: (namespace: String, klass: untyped) -> void
+  def initialize: (namespace: String, klass: Module) -> void
 
   def base: (Symbol) -> String
 

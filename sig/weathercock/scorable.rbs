@@ -13,7 +13,7 @@ module Weathercock::Scorable
   def remove_hits: (Symbol) -> Array[untyped]
 end
 
-module Weathercock::Scorable::ClassMethods
+module Weathercock::Scorable::ClassMethods : Module
   def weathercock_scorer: () -> Weathercock::Scorer
 
   def top: (Symbol, limit: Integer?, ?decay_factor: Float, **untyped) -> Array[String]
