@@ -1,4 +1,16 @@
 module Weathercock
   VERSION: String
-  # See the writing guide of rbs: https://github.com/ruby/rbs#guides
+
+  class Error < StandardError
+  end
+
+  class Config
+    attr_accessor namespace: String
+    attr_accessor redis: untyped
+
+    def initialize: () -> void
+  end
+
+  def self.configure: () { (Config) -> void } -> void
+  def self.config: () -> Config
 end

@@ -1,0 +1,21 @@
+module Weathercock::Scorable
+  def self.included: (Class) -> Class
+
+  def hit: (Symbol, ?increment: Integer) -> Array[untyped]
+
+  def hit_count: (Symbol, **nil) -> Integer
+               | (Symbol, **Integer) -> Integer
+
+  def rank: (Symbol, **nil) -> Integer
+          | (Symbol, **nil) -> nil
+
+  def remove_hits: (Symbol) -> Array[untyped]
+end
+
+module Weathercock::Scorable::ClassMethods
+  def weathercock_scorer: () -> Weathercock::Scorer
+
+  def top: (Symbol, limit: Integer, ?decay_factor: nil, **nil) -> Array[untyped]
+
+  def hit_counts: (Symbol, ids: Array[untyped], **nil) -> Hash[untyped, untyped]
+end
