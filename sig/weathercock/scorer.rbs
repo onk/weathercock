@@ -8,9 +8,9 @@ class Weathercock::Scorer
 
   def hit_count: (Integer, Symbol, **Integer) -> Integer
 
-  def union: (Symbol, Hash[untyped, untyped], ?decay_factor: Float?) -> String
+  def union: (Symbol, Hash[untyped, untyped], ?decay_factor: Float) -> String
 
-  def top: (Symbol, limit: Integer?, ?decay_factor: Float?, **Integer) -> Array[String]
+  def top: (Symbol, limit: Integer?, ?decay_factor: Float, **Integer) -> Array[String]
 
   def hit_counts: (Symbol, ids: Array[untyped], **Integer) -> Hash[String, Integer]
 

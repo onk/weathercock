@@ -16,7 +16,7 @@ end
 module Weathercock::Scorable::ClassMethods
   def weathercock_scorer: () -> Weathercock::Scorer
 
-  def top: (Symbol, limit: Integer?, ?decay_factor: Float?, **untyped) -> Array[String]
+  def top: (Symbol, limit: Integer?, ?decay_factor: Float, **untyped) -> Array[String]
 
   def hit_counts: (Symbol, ids: Array[untyped], **untyped) -> Hash[String, Integer]
 end
