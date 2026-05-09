@@ -1,0 +1,20 @@
+class Weathercock::Scorer
+  BUCKET_COUNT: Integer
+  BUCKET_TTLS: Hash[:hours | :days | :months, Integer]
+
+  def initialize: (klass: Module) -> void
+
+  def hit: (Weathercock::id, Symbol, ?increment: Integer) -> void
+
+  def hit_count: (Weathercock::id, Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer
+
+  def union: (Symbol, Hash[untyped, untyped], ?decay_factor: Float) -> String
+
+  def top: (Symbol, limit: Integer?, ?decay_factor: Float, ?hours: Integer, ?days: Integer, ?months: Integer) -> Array[String]
+
+  def hit_counts: (Symbol, ids: Array[Weathercock::id], ?hours: Integer, ?days: Integer, ?months: Integer) -> Hash[String, Integer]
+
+  def rank: (Weathercock::id, Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer?
+
+  def remove_hits: (Weathercock::id, Symbol) -> void
+end

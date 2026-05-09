@@ -1,0 +1,25 @@
+module Weathercock::Scorable
+  def self.included: (Module) -> void
+  # steep infers self.class in instance methods as singleton(Scorable),
+  # so declare weathercock_scorer here to satisfy the type checker.
+  def self.weathercock_scorer: () -> Weathercock::Scorer
+
+  # Expected to be provided by the including class (e.g. ActiveRecord).
+  def id: () -> Weathercock::id
+
+  def hit: (Symbol, ?increment: Integer) -> void
+
+  def hit_count: (Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer
+
+  def rank: (Symbol, ?hours: Integer, ?days: Integer, ?months: Integer) -> Integer?
+
+  def remove_hits: (Symbol) -> void
+end
+
+module Weathercock::Scorable::ClassMethods : Module
+  def weathercock_scorer: () -> Weathercock::Scorer
+
+  def top: (Symbol, limit: Integer?, ?decay_factor: Float, ?hours: Integer, ?days: Integer, ?months: Integer) -> Array[String]
+
+  def hit_counts: (Symbol, ids: Array[Weathercock::id], ?hours: Integer, ?days: Integer, ?months: Integer) -> Hash[String, Integer]
+end

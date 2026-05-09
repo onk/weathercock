@@ -1,0 +1,13 @@
+class Weathercock::KeyBuilder
+  def initialize: (namespace: String, klass: Module) -> void
+
+  def base: (Symbol) -> String
+
+  def total: (String) -> String
+
+  def bucket: (String, :hours | :days | :months, Date | Time) -> String
+
+  def window_keys: (String, :hours | :days | :months, Integer) -> Array[String]
+
+  def union_dest: (String, :hours | :days | :months, Integer) -> String
+end
