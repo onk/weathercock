@@ -74,7 +74,9 @@ module Weathercock
       base = @key_builder.base(event)
       dest = window.empty? ? @key_builder.total(base) : union(event, window)
       scores = @redis.call("ZMSCORE", dest, *ids.map(&:to_s))
-      ids.zip(scores).to_h { |id, score| [id.to_s, Integer(score || "0")] }
+      ids.zip(scores).to_h do |id, score|
+        [id.to_s, Integer(score || "0")] #: [String, Integer]
+      end
     end
 
     private
