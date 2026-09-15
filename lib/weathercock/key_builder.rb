@@ -38,8 +38,9 @@ module Weathercock
       end
     end
 
-    def union_dest(base, type, count)
-      "#{base}:top:#{type}:#{count}"
+    def union_dest(base, type, count, decay_factor: nil)
+      dest = "#{base}:top:#{type}:#{count}"
+      decay_factor ? "#{dest}:decay:#{decay_factor}" : dest
     end
   end
 end

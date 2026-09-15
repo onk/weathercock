@@ -74,5 +74,10 @@ RSpec.describe Weathercock::KeyBuilder do
     it "builds destination key for union result" do
       expect(kb.union_dest("wc:blog_article:views", :days, 7)).to eq("wc:blog_article:views:top:days:7")
     end
+
+    it "includes decay_factor in the destination key when given" do
+      expect(kb.union_dest("wc:blog_article:views", :days, 7, decay_factor: 0.9))
+        .to eq("wc:blog_article:views:top:days:7:decay:0.9")
+    end
   end
 end

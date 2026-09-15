@@ -9,5 +9,5 @@ class Weathercock::KeyBuilder
 
   def window_keys: (String, :hours | :days | :months, Integer) -> Array[String]
 
-  def union_dest: (String, :hours | :days | :months, Integer) -> String
+  def union_dest: (String, :hours | :days | :months, Integer, ?decay_factor: Float) -> String
 end
