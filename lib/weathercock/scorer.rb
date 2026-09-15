@@ -84,17 +84,19 @@ module Weathercock
     def union(event, window, decay_factor: nil)
       base = @key_builder.base(event)
       type, count = window.first
-      keys = @key_builder.window_keys(base, type, count)
       dest = if decay_factor
                @key_builder.union_dest(base, type, count, decay_factor: decay_factor)
              else
                @key_builder.union_dest(base, type, count)
              end
 
-      weights = decay_factor ? count.times.map { |i| (decay_factor**i).round(10) } : nil
-      zunionstore_args = ["ZUNIONSTORE", dest, keys.size, *keys]
-      zunionstore_args += ["WEIGHTS", *weights] if weights
-      @redis.call(*zunionstore_args)
+      unless @redis.call("EXISTS", dest) == 1
+        keys = @key_builder.window_keys(base, type, count)
+        weights = decay_factor ? count.times.map { |i| (decay_factor**i).round(10) } : nil
+        zunionstore_args = ["ZUNIONSTORE", dest, keys.size, *keys]
+        zunionstore_args += ["WEIGHTS", *weights] if weights
+        @redis.call(*zunionstore_args)
+      end
       @redis.call("EXPIRE", dest, 900)
       dest
     end
