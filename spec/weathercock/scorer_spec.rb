@@ -181,6 +181,15 @@ RSpec.describe Weathercock::Scorer do
       expect(redis.call("ZSCORE", dest, "2").to_f).to eq(10.0)
       expect(redis.call("ZSCORE", dest, "1").to_f).to be_within(0.001).of(8.1)
     end
+
+    it "reuses the cached union result for a second call within the same window" do
+      allow(redis).to receive(:call).and_call_original
+
+      scorer.top(:views, days: 7, limit: nil)
+      scorer.top(:views, days: 7, limit: nil)
+
+      expect(redis).to have_received(:call).with("ZUNIONSTORE", any_args).once
+    end
   end
 
   describe "#rank" do
