@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.0 - 2026-09-16
+
+### Changed
+
+- `union` now reuses an existing destination key instead of always recomputing it, so its 900 second TTL works as a cache
+- `union_dest` now includes `decay_factor` so decayed and non-decayed results no longer share a cache entry
+
 ## v1.1.0 - 2026-04-17
 
 ### Added
