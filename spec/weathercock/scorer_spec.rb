@@ -177,7 +177,7 @@ RSpec.describe Weathercock::Scorer do
       Timecop.freeze(Time.new(2026, 4, 15, 7, 0, 0)) { scorer.hit(1, :views, increment: 10) }
       Timecop.freeze(Time.new(2026, 4, 15, 9, 0, 0)) { scorer.hit(2, :views, increment: 10) }
       scorer.top(:views, hours: 3, decay_factor: 0.9, limit: nil)
-      dest = "weathercock:article:views:top:hours:3"
+      dest = "weathercock:article:views:top:hours:3:decay:0.9"
       expect(redis.call("ZSCORE", dest, "2").to_f).to eq(10.0)
       expect(redis.call("ZSCORE", dest, "1").to_f).to be_within(0.001).of(8.1)
     end

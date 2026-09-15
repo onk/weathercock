@@ -85,7 +85,11 @@ module Weathercock
       base = @key_builder.base(event)
       type, count = window.first
       keys = @key_builder.window_keys(base, type, count)
-      dest = @key_builder.union_dest(base, type, count)
+      dest = if decay_factor
+               @key_builder.union_dest(base, type, count, decay_factor: decay_factor)
+             else
+               @key_builder.union_dest(base, type, count)
+             end
 
       weights = decay_factor ? count.times.map { |i| (decay_factor**i).round(10) } : nil
       zunionstore_args = ["ZUNIONSTORE", dest, keys.size, *keys]
