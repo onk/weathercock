@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.3.0 - 2026-09-18
+
+### Changed
+
+- Time-bucketed keys now prefer `Time.current` (when ActiveSupport is loaded) over `Time.now`, so bucket boundaries follow the application's configured time zone instead of each host's TZ
+
+### Fixed
+
+- Daily window keys are now built by calendar-day arithmetic; elapsed-seconds arithmetic could skip a date around a DST transition
+
 ## v1.2.0 - 2026-09-16
 
 ### Changed
