@@ -60,6 +60,20 @@ RSpec.describe Weathercock::KeyBuilder do
       ])
     end
 
+    it "returns consecutive daily keys across a DST spring-forward transition" do
+      old_tz = ENV.fetch("TZ", nil)
+      ENV["TZ"] = "America/New_York" # DST starts on 2026-03-08
+      Timecop.freeze(Time.new(2026, 3, 9, 0, 30, 0))
+      keys = kb.window_keys(base, :days, 3)
+      expect(keys).to eq([
+        "wc:blog_article:views:2026-03-09",
+        "wc:blog_article:views:2026-03-08",
+        "wc:blog_article:views:2026-03-07"
+      ])
+    ensure
+      ENV["TZ"] = old_tz
+    end
+
     it "returns monthly keys from newest to oldest" do
       keys = kb.window_keys(base, :months, 3)
       expect(keys).to eq([
