@@ -60,6 +60,25 @@ RSpec.describe Weathercock::Scorer do
     end
   end
 
+  describe "time zone awareness" do
+    before do
+      # Simulates ActiveSupport's Time.current, which follows the app time zone
+      # and can differ from Time.now (frozen at 2026-04-15 09:00 above).
+      allow(Time).to receive(:current).and_return(Time.new(2026, 4, 16, 0, 0, 0))
+    end
+
+    it "prefers Time.current over Time.now for bucket keys" do
+      scorer.hit(42, :views)
+      expect(redis.call("ZSCORE", "weathercock:article:views:2026-04-16", "42")).to eq(1.0)
+      expect(redis.call("ZSCORE", "weathercock:article:views:2026-04-15", "42")).to be_nil
+    end
+
+    it "prefers Time.current over Time.now for window aggregation" do
+      scorer.hit(42, :views)
+      expect(scorer.top(:views, days: 1, limit: nil)).to eq(["42"])
+    end
+  end
+
   describe "#remove_hits" do
     before { scorer.hit(42, :views) }
 

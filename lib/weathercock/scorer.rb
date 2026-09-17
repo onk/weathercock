@@ -16,7 +16,9 @@ module Weathercock
     end
 
     def hit(id, event, increment: 1)
-      now = Time.now
+      # Time.current (ActiveSupport) follows the app-configured time zone, so
+      # bucket boundaries do not depend on each host's TZ setting.
+      now = Time.respond_to?(:current) ? Time.current : Time.now # steep:ignore NoMethod
       base = @key_builder.base(event)
 
       @redis.pipelined do |p|
