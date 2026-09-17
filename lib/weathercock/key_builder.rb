@@ -33,7 +33,9 @@ module Weathercock
       when :hours
         count.times.map { |i| bucket(base, type, now - (i * 3600)) }
       when :days
-        count.times.map { |i| bucket(base, type, now - (i * 86400)) }
+        # now - i * 86400 would skip a date around a DST transition
+        today = now.to_date
+        count.times.map { |i| bucket(base, type, today - i) }
       when :months
         d = Date.new(now.year, now.month)
         count.times.map { |i| bucket(base, type, d << i) }
