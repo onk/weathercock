@@ -21,6 +21,10 @@ Weathercock.configure do |c|
 end
 ```
 
+### Time zone
+
+Time-bucketed keys are built from `Time.current` when it is available (i.e. ActiveSupport is loaded), so in a Rails app bucket boundaries follow `config.time_zone` regardless of each host's `TZ` setting. Outside Rails, `Time.now` (system time zone) is used.
+
 ### Tracking
 
 Include `Weathercock::Scorable` in any class that has an `id`:
